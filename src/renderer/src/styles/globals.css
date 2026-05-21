@@ -122,6 +122,14 @@
   -webkit-app-region: no-drag;
 }
 
+/* On Linux/Windows the BrowserWindow is created with `transparent: true`
+ * so the React root can paint its own rounded corners. Body's own
+ * background would otherwise fill the rounded area and defeat the
+ * effect, so we strip it when the App component opts in. */
+body.window-transparent {
+  background: transparent;
+}
+
 /* Smooth transitions for theme changes */
 .theme-transition,
 .theme-transition * {

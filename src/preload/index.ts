@@ -78,6 +78,12 @@ const api = {
   minimizeWindow: (): void => { ipcRenderer.send('window:minimize') },
   maximizeWindow: (): void => { ipcRenderer.send('window:maximize') },
   closeWindow: (): void => { ipcRenderer.send('window:close') },
+  isWindowMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:is-maximized'),
+  onMaximizedChanged: (cb: (maximized: boolean) => void): (() => void) => {
+    const handler = (_: unknown, maximized: boolean): void => cb(maximized)
+    ipcRenderer.on('window:maximized-changed', handler)
+    return () => ipcRenderer.removeListener('window:maximized-changed', handler)
+  },
   getPlatform: (): string => process.platform
 }
 

@@ -1,9 +1,10 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useLibraryStore } from '@/stores/library-store'
 import { useReaderStore } from '@/stores/reader-store'
 import { useCommandPaletteStore } from '@/stores/command-palette-store'
 import { useSelectionStore } from '@/stores/selection-store'
 import { AppShell } from '@/components/layout/AppShell'
+import { cn } from '@/lib/utils'
 
 export default function App() {
   const { theme, setTheme, filteredBooks } = useLibraryStore()
@@ -11,6 +12,27 @@ export default function App() {
     currentBook, currentPage, totalPages, setPage,
     zoomIn, zoomOut, toggleSidebar, toggleAIPanel, closeBook
   } = useReaderStore()
+
+  // Linux/Windows use a transparent frameless BrowserWindow so we can
+  // paint our own rounded corners. macOS gets native window rounding,
+  // so the wrapper stays a plain rectangle there.
+  const needsRoundedWindow = window.api.getPlatform() !== 'darwin'
+  const [isMaximized, setIsMaximized] = useState(false)
+
+  useEffect(() => {
+    if (!needsRoundedWindow) return
+    // Body must be transparent on non-darwin or its background color
+    // would fill the area "behind" our rounded corners, making the
+    // rounding invisible.
+    document.body.classList.add('window-transparent')
+    return () => document.body.classList.remove('window-transparent')
+  }, [needsRoundedWindow])
+
+  useEffect(() => {
+    if (!needsRoundedWindow) return
+    void window.api.isWindowMaximized().then(setIsMaximized)
+    return window.api.onMaximizedChanged(setIsMaximized)
+  }, [needsRoundedWindow])
 
   useEffect(() => {
     const root = document.documentElement
@@ -95,7 +117,15 @@ export default function App() {
 
   return (
     <div className={theme}>
-      <div className="h-screen bg-background text-foreground theme-transition">
+      <div
+        className={cn(
+          'h-screen w-screen overflow-hidden bg-background text-foreground theme-transition',
+          // Only round on Linux/Windows (macOS rounds natively) and only
+          // when not maximized — otherwise the rounded corners get clipped
+          // at the monitor edges.
+          needsRoundedWindow && !isMaximized && 'rounded-xl border border-border/60'
+        )}
+      >
         <AppShell />
       </div>
     </div>

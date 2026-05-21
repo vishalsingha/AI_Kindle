@@ -40,18 +40,28 @@ function createWindow(): void {
   const icon = iconPath ? nativeImage.createFromPath(iconPath) : null
 
   // Per-platform window chrome:
-  //   macOS  → hidden-inset titlebar so the native trafficlight buttons
-  //            float over our custom <Titlebar /> component.
-  //   Linux  → no native frame at all. Linux window managers (GNOME,
-  //            KDE, XFCE…) would otherwise draw their own title bar
-  //            *on top of* the custom one, producing a duplicate
-  //            ("double title bar") look. The custom Titlebar already
-  //            renders min/max/close buttons when platform !== 'darwin'.
-  //   Windows → same as Linux for the same reason.
-  const platformChrome =
-    process.platform === 'darwin'
-      ? ({ titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 15, y: 15 } } as const)
-      : ({ frame: false } as const)
+  //   macOS   → hidden-inset titlebar so the native trafficlight buttons
+  //             float over our custom <Titlebar />. Corners are rounded
+  //             natively by the OS.
+  //   Linux   → no native frame + transparent surface, so CSS in the
+  //             renderer can paint rounded corners. Without `transparent`
+  //             the renderer's background would fill the corners and
+  //             border-radius would be invisible.
+  //   Windows → same as Linux for the same reasons.
+  const isDarwin = process.platform === 'darwin'
+  const platformChrome = isDarwin
+    ? ({
+        titleBarStyle: 'hiddenInset' as const,
+        trafficLightPosition: { x: 15, y: 15 },
+        backgroundColor: '#FEFCF3'
+      } as const)
+    : ({
+        frame: false,
+        transparent: true,
+        // No backgroundColor on transparent windows: any non-zero alpha here
+        // would paint behind the renderer and defeat the corner rounding.
+        hasShadow: true
+      } as const)
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -60,7 +70,6 @@ function createWindow(): void {
     minHeight: 600,
     show: false,
     ...(icon && !icon.isEmpty() ? { icon } : {}),
-    backgroundColor: '#FEFCF3',
     ...platformChrome,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -69,6 +78,17 @@ function createWindow(): void {
       allowRunningInsecureContent: true
     }
   })
+
+  // Tell the renderer when the maximized state changes so it can drop
+  // the corner rounding while maximized (otherwise the rounded corners
+  // get cropped at the screen edges and look broken).
+  const sendMaxState = (): void => {
+    mainWindow?.webContents.send('window:maximized-changed', mainWindow.isMaximized())
+  }
+  mainWindow.on('maximize', sendMaxState)
+  mainWindow.on('unmaximize', sendMaxState)
+  mainWindow.on('enter-full-screen', sendMaxState)
+  mainWindow.on('leave-full-screen', sendMaxState)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
@@ -114,6 +134,9 @@ app.whenReady().then(async () => {
     }
   })
   ipcMain.on('window:close', () => mainWindow?.close())
+  ipcMain.handle('window:is-maximized', () =>
+    Boolean(mainWindow?.isMaximized() || mainWindow?.isFullScreen())
+  )
 
   createWindow()
 

@@ -155,6 +155,8 @@ interface API {
   minimizeWindow: () => void
   maximizeWindow: () => void
   closeWindow: () => void
+  isWindowMaximized: () => Promise<boolean>
+  onMaximizedChanged: (cb: (maximized: boolean) => void) => () => void
   getPlatform: () => string
 }
 
