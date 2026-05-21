@@ -39,6 +39,20 @@ function createWindow(): void {
   // Electron's default if the user ever removes resources/icon.png.
   const icon = iconPath ? nativeImage.createFromPath(iconPath) : null
 
+  // Per-platform window chrome:
+  //   macOS  → hidden-inset titlebar so the native trafficlight buttons
+  //            float over our custom <Titlebar /> component.
+  //   Linux  → no native frame at all. Linux window managers (GNOME,
+  //            KDE, XFCE…) would otherwise draw their own title bar
+  //            *on top of* the custom one, producing a duplicate
+  //            ("double title bar") look. The custom Titlebar already
+  //            renders min/max/close buttons when platform !== 'darwin'.
+  //   Windows → same as Linux for the same reason.
+  const platformChrome =
+    process.platform === 'darwin'
+      ? ({ titleBarStyle: 'hiddenInset' as const, trafficLightPosition: { x: 15, y: 15 } } as const)
+      : ({ frame: false } as const)
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 860,
@@ -47,8 +61,7 @@ function createWindow(): void {
     show: false,
     ...(icon && !icon.isEmpty() ? { icon } : {}),
     backgroundColor: '#FEFCF3',
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 15, y: 15 },
+    ...platformChrome,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
