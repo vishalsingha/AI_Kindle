@@ -1,0 +1,352 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 38 75% 31%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 36 25% 92%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 36 20% 94%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 38 65% 55%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 20% 88%;
+    --input: 30 20% 88%;
+    --ring: 38 75% 31%;
+    --sidebar: 36 25% 93%;
+    --sidebar-foreground: 0 0% 10%;
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    --background: 0 0% 9%;
+    --foreground: 30 20% 88%;
+    --card: 0 0% 12%;
+    --card-foreground: 30 20% 88%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 30 20% 88%;
+    --primary: 38 65% 55%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 30 20% 88%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 43 90% 61%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 38 65% 55%;
+    --sidebar: 0 0% 11%;
+    --sidebar-foreground: 30 20% 88%;
+  }
+
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    user-select: none;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* PDF text layer - allow text selection */
+.react-pdf__Page__textContent {
+  user-select: text !important;
+}
+.react-pdf__Page__textContent span {
+  user-select: text !important;
+}
+
+/* Tone down drag-selection inside the PDF text layer.
+ *
+ * pdf.js paints the real text onto the canvas and lays transparent glyph
+ * spans on top of it for selection. Chromium's default ::selection colour
+ * is a saturated blue — drawn on top of those transparent spans it ends up
+ * covering the real (canvas) text below and looks much darker than our
+ * annotation highlights. A soft translucent blue scoped to the PDF text
+ * layer gives visible drag-selection without overpowering the text. */
+.react-pdf__Page__textContent ::selection,
+.react-pdf__Page__textContent::selection {
+  background-color: rgba(59, 130, 246, 0.22);
+  /* Keep the glyph spans transparent while selected so the real text
+   * rendered on the canvas below stays pin-sharp and un-tinted. */
+  color: transparent;
+}
+
+/* PDF annotation layer */
+.react-pdf__Page__annotations {
+  pointer-events: none;
+}
+
+/* Drag region for titlebar */
+.titlebar-drag {
+  -webkit-app-region: drag;
+}
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Smooth transitions for theme changes */
+.theme-transition,
+.theme-transition * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Selection toolbar animation */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-pop-in {
+  animation: pop-in 0.15s ease-out;
+}
+
+/* Fade only — for elements that are already positioned via transform
+ * (e.g. centered dialogs). Animating `transform` on those would override
+ * their translate and make them jump across the screen. */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
+}
+
+/* Command palette entrance — preserves translateX(-50%) centering
+ * throughout the animation so the dialog doesn't fly in from the side. */
+@keyframes command-palette-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+.animate-command-palette-in {
+  animation: command-palette-in 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Slide-in animations used by the sidebar/notes panels */
+@keyframes slide-in-left {
+  from { transform: translateX(-12px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-left {
+  animation: slide-in-left 0.18s ease-out;
+}
+@keyframes slide-in-right {
+  from { transform: translateX(12px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-slide-in-right {
+  animation: slide-in-right 0.18s ease-out;
+}
+
+/* Markdown preview typography — scoped to .markdown-preview so we don't
+ * affect Tailwind-styled content elsewhere. */
+.markdown-preview {
+  user-select: text;
+}
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.25em 0 0.5em;
+}
+.markdown-preview h1 { font-size: 1.6em; border-bottom: 1px solid hsl(var(--border)); padding-bottom: 0.25em; }
+.markdown-preview h2 { font-size: 1.35em; }
+.markdown-preview h3 { font-size: 1.15em; }
+.markdown-preview h4 { font-size: 1em; }
+.markdown-preview h5,
+.markdown-preview h6 { font-size: 0.95em; color: hsl(var(--muted-foreground)); }
+.markdown-preview p { margin: 0.6em 0; }
+.markdown-preview ul,
+.markdown-preview ol { margin: 0.6em 0 0.6em 1.4em; }
+.markdown-preview ul { list-style: disc; }
+.markdown-preview ol { list-style: decimal; }
+.markdown-preview li { margin: 0.2em 0; }
+.markdown-preview blockquote {
+  border-left: 3px solid hsl(var(--primary) / 0.5);
+  padding: 0.1em 0 0.1em 0.9em;
+  margin: 0.8em 0;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted) / 0.4);
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+.markdown-preview blockquote p { margin: 0.3em 0; }
+.markdown-preview code {
+  background: hsl(var(--muted));
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+  font-size: 0.88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.markdown-preview pre {
+  background: hsl(var(--muted));
+  padding: 0.75em 0.9em;
+  border-radius: 0.4rem;
+  overflow-x: auto;
+  margin: 0.8em 0;
+  font-size: 0.88em;
+  line-height: 1.5;
+}
+.markdown-preview pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.markdown-preview a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-preview hr {
+  border: none;
+  border-top: 1px solid hsl(var(--border));
+  margin: 1.5em 0;
+}
+.markdown-preview strong { font-weight: 600; }
+.markdown-preview em { font-style: italic; }
+.markdown-preview img { max-width: 100%; border-radius: 0.25rem; }
+
+/* The app otherwise disables text selection for a desktop-app feel
+ * (see body { user-select: none } above), but chat bubbles should behave
+ * like normal prose so the user can select + copy any part of the reply. */
+.chat-bubble-selectable,
+.chat-bubble-selectable * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text;
+}
+.chat-bubble-selectable a,
+.chat-bubble-selectable button {
+  cursor: pointer;
+}
+
+/* KaTeX output inside chat bubbles and the notes preview. Both surfaces
+ * render markdown through remark-math + rehype-katex which emits HTML
+ * that KaTeX's own stylesheet styles — we only need to (a) make block
+ * equations scroll horizontally when they're wider than the container,
+ * and (b) keep font color in sync with the bubble / preview's text
+ * color (KaTeX defaults to color: inherit already, but force it to be
+ * safe across themes). */
+.chat-md .katex,
+.notes-md .katex {
+  color: inherit;
+  font-size: 1em;
+}
+.chat-md .katex-display,
+.notes-md .katex-display {
+  margin: 0.6em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.15em 0;
+}
+.chat-md .katex-display > .katex,
+.notes-md .katex-display > .katex {
+  white-space: nowrap;
+}
+
+/* The notes preview is a prose surface: allow normal text selection so
+ * users can copy pieces of their rendered notes. */
+.notes-md,
+.notes-md * {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Pulse animation for AI streaming */
+@keyframes pulse-dot {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+.streaming-dot:nth-child(1) { animation: pulse-dot 1.4s infinite 0s; }
+.streaming-dot:nth-child(2) { animation: pulse-dot 1.4s infinite 0.2s; }
+.streaming-dot:nth-child(3) { animation: pulse-dot 1.4s infinite 0.4s; }
+
+/* ─── Focus ring utility ──────────────────────────────────────────────
+ * Used by icon-only buttons (titlebar, sidebar, PDF controls, AI panel)
+ * so keyboard users can see what's focused. Applied via .focus-ring
+ * helper class — explicitly added per element rather than auto-applied
+ * to every button so we don't fight component-specific focus styles. */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  outline: 2px solid hsl(var(--ring) / 0.55);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ─── Skeleton shimmer ────────────────────────────────────────────────
+ * Sweep a soft gradient across a placeholder block while data loads.
+ * Used by the library skeleton grid and individual thumbnail
+ * placeholders. The gradient uses theme-aware HSL so it looks right in
+ * both light and dark mode without extra rules. */
+@keyframes skeleton-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+.skeleton {
+  background-color: hsl(var(--muted));
+  background-image: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--secondary)) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}

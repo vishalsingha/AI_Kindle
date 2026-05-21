@@ -1,0 +1,109 @@
+appId: com.ai-kindle.app
+productName: AI Kindle
+copyright: Copyright © 2025 AI Kindle
+
+# Only ship the built output + the package.json itself; everything
+# needed is under out/ (main, preload, renderer) once `npm run build` runs.
+files:
+  - out/**/*
+  - package.json
+  - "!**/.vscode"
+  - "!{.eslintrc*,.prettier*,.editorconfig,.gitignore,.github}"
+  - "!{dist,release,build}"
+
+# Native modules (better-sqlite3) have to be rebuilt for Electron's Node ABI
+# and their .node files kept as-is in app.asar.unpacked so Electron can
+# dlopen them at runtime.
+asar: true
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**/*"
+  - "**/node_modules/bindings/**/*"
+  - "**/node_modules/file-uri-to-path/**/*"
+
+directories:
+  output: release
+  buildResources: resources
+
+# Copy the app icon into the packaged Resources folder so the main
+# process can load it at runtime (see `resolveIconPath()` in src/main).
+# This is separate from `mac.icon` / `win.icon`, which only control the
+# built-in app bundle / exe icon.
+extraResources:
+  - from: resources/icon.png
+    to: icon.png
+
+# ─── macOS ─────────────────────────────────────────────────────────────
+mac:
+  category: public.app-category.productivity
+  icon: resources/icon.png
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  # Unsigned builds are fine for local distribution. Users will need to
+  # right-click → Open on first launch. To sign + notarize set CSC_LINK
+  # and the APPLE_* env vars and flip `identity` back on.
+  identity: null
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+
+dmg:
+  title: ${productName} ${version}
+  icon: resources/icon.png
+  contents:
+    - x: 140
+      y: 180
+      type: file
+    - x: 400
+      y: 180
+      type: link
+      path: /Applications
+
+# ─── Windows ───────────────────────────────────────────────────────────
+win:
+  icon: resources/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  publisherName: AI Kindle
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  allowElevation: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AI Kindle
+
+# ─── Linux ─────────────────────────────────────────────────────────────
+linux:
+  category: Office
+  icon: resources/icon.png
+  synopsis: A local, AI-assisted PDF study companion
+  description: |
+    AI Kindle is a desktop app for reading, annotating, and studying PDFs with
+    local AI assistance powered by Ollama. All PDFs and annotations stay on
+    your machine.
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+
+# ─── Publishing ────────────────────────────────────────────────────────
+# No auto-update server configured by default; artifacts go to ./release/.
+publish: null

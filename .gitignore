@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+release/
+*.db
+.DS_Store
+
+# electron-builder cache
+.cache/
