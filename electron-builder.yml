@@ -91,11 +91,38 @@ nsis:
 linux:
   category: Office
   icon: resources/icon.png
+  # Force a clean, no-spaces executable name so the binary path inside the
+  # .deb is /opt/AI Kindle/ai-kindle and the .desktop file's Exec= line
+  # resolves cleanly. Spaces in executable paths confuse some shells
+  # and a few desktop environments.
+  executableName: ai-kindle
   synopsis: A local, AI-assisted PDF study companion
   description: |
     AI Kindle is a desktop app for reading, annotating, and studying PDFs with
     local AI assistance powered by Ollama. All PDFs and annotations stay on
     your machine.
+
+  # Explicit .desktop entry so the app reliably appears in the GNOME
+  # Activities overview, Files / Nautilus right-click → "Open With…",
+  # KDE's Kickoff menu, and the XFCE Whisker menu. Without this block
+  # electron-builder still ships a .desktop file, but with sparse fields
+  # that some desktop environments quietly ignore for search.
+  desktop:
+    entry:
+      Name: AI Kindle
+      GenericName: PDF Reader
+      Comment: AI-assisted PDF reader with annotations, notes, and chat
+      Categories: Office;Education;Viewer;Utility;
+      Keywords: pdf;reader;ebook;annotations;ai;study;notes;
+      Type: Application
+      Terminal: false
+      # Must match what Electron uses for the X11/Wayland window class —
+      # otherwise GNOME shows a generic icon in the dock instead of
+      # AI Kindle's icon when the window is focused.
+      StartupWMClass: AI Kindle
+      StartupNotify: "true"
+      MimeType: application/pdf;
+
   target:
     - target: AppImage
       arch:
@@ -103,6 +130,10 @@ linux:
     - target: deb
       arch:
         - x64
+
+# electron-builder's default .deb maintainer scripts already run
+# update-desktop-database and gtk-update-icon-cache on install/remove,
+# so no custom fpm hooks are needed.
 
 # ─── Publishing ────────────────────────────────────────────────────────
 # No auto-update server configured by default; artifacts go to ./release/.
