@@ -5,6 +5,43 @@ import { randomUUID } from 'crypto'
 
 let db: Database.Database
 
+// ─── Portable filepath storage ────────────────────────────────────────────
+//
+// We store only the basename of each PDF in the DB and resolve it against
+// the current user's library directory at read time. This makes the data
+// directory portable across machines and operating systems:
+//
+//   • Mac: ~/Library/Application Support/ai-kindle/library/<id>.pdf
+//   • Linux: ~/.config/ai-kindle/library/<id>.pdf
+//   • Windows: %APPDATA%/ai-kindle/library/<id>.pdf
+//
+// As long as the user copies the library folder + db together, the same
+// rows resolve to the right file on every device.
+
+function libraryDirAbsolute(): string {
+  return join(app.getPath('userData'), 'library')
+}
+
+function extractBasename(p: string): string {
+  if (!p) return ''
+  // Robust against both / and \ so that data created on Windows still
+  // normalizes correctly when opened on macOS or Linux.
+  const parts = p.replace(/\\/g, '/').split('/')
+  return parts[parts.length - 1] || p
+}
+
+function toStoredFilepath(filepath: string): string {
+  return extractBasename(filepath)
+}
+
+function toResolvedFilepath(stored: string): string {
+  if (!stored) return ''
+  // Self-healing: re-extract the basename on every read so a legacy
+  // absolute path that escaped the one-time migration still resolves
+  // to the current machine's library directory.
+  return join(libraryDirAbsolute(), extractBasename(stored))
+}
+
 export function initDatabase(): void {
   const dbPath = join(app.getPath('userData'), 'ai-kindle.db')
   db = new Database(dbPath)
@@ -145,6 +182,23 @@ export function initDatabase(): void {
     CREATE INDEX IF NOT EXISTS idx_books_last_read ON books(last_read);
     CREATE INDEX IF NOT EXISTS idx_notes_book ON notes(book_id);
   `)
+
+  // One-time migration: collapse any absolute filepaths down to just the
+  // basename so the DB becomes machine-portable. New imports already store
+  // only the basename (see addBook), so this runs once per legacy install
+  // and is a no-op thereafter.
+  const absoluteRows = db
+    .prepare("SELECT id, filepath FROM books WHERE filepath LIKE '%/%' OR filepath LIKE '%\\%'")
+    .all() as Array<{ id: string; filepath: string }>
+  if (absoluteRows.length > 0) {
+    const updateStmt = db.prepare('UPDATE books SET filepath = ? WHERE id = ?')
+    const tx = db.transaction(() => {
+      for (const row of absoluteRows) {
+        updateStmt.run(extractBasename(row.filepath), row.id)
+      }
+    })
+    tx()
+  }
 
   // One-time migration: if a book had a legacy single note in \`book_notes\`
   // and no rows yet in the new multi-note \`notes\` table, lift it over as
@@ -294,7 +348,20 @@ export function addBook(book: any): any {
     INSERT OR IGNORE INTO books (id, hash, title, author, filename, filepath, page_count, current_page, status, tags, date_added, last_read)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
-  stmt.run(book.id, book.hash, book.title, book.author, book.filename, book.filepath, book.pageCount, book.currentPage, book.status || 'todo', JSON.stringify(book.tags || []), book.dateAdded, book.lastRead || null)
+  stmt.run(
+    book.id,
+    book.hash,
+    book.title,
+    book.author,
+    book.filename,
+    toStoredFilepath(book.filepath),
+    book.pageCount,
+    book.currentPage,
+    book.status || 'todo',
+    JSON.stringify(book.tags || []),
+    book.dateAdded,
+    book.lastRead || null
+  )
   return book
 }
 
@@ -369,6 +436,10 @@ export function deleteBookFromDB(id: string): void {
 function formatBook(row: any): any {
   return {
     ...row,
+    // Always resolve filepath against the current machine's library dir,
+    // so the renderer (which expects absolute paths for the PDF viewer)
+    // gets a working path regardless of where the DB originated.
+    filepath: toResolvedFilepath(row.filepath),
     pageCount: row.page_count,
     currentPage: row.current_page,
     dateAdded: row.date_added,

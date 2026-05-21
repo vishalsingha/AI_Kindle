@@ -1,12 +1,12 @@
 {
   "name": "ai-kindle",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "AI Kindle - Desktop Study Companion",
   "author": {
     "name": "AI Kindle",
     "email": "noreply@ai-kindle.local"
   },
-  "homepage": "https://github.com/local/ai-kindle",
+  "homepage": "https://github.com/vishalsingha/AI_Kindle",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
