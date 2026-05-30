@@ -67,5 +67,6 @@ Most desktop PDF readers are either dumb (no notes, no search, no progress track
 - Storage is **SQLite (WAL mode)** for metadata and the local filesystem for PDFs and thumbnails.
 - AI is optional and uses any **OpenAI-compatible** endpoint — your key is encrypted with Electron's `safeStorage`.
 - Source: [github.com/vishalsingha/AI_Kindle](https://github.com/vishalsingha/AI_Kindle)
+- Issues and feedback: [GitHub Issues](https://github.com/vishalsingha/AI_Kindle/issues)
 
 </div>
