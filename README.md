@@ -6,9 +6,11 @@
 
 Keep a searchable library of PDFs, annotate them with highlights and notes, write long-form Markdown notes alongside each book, open two books side-by-side, and ask an AI to summarize, explain, or chat about what you're reading — all without uploading your documents anywhere.
 
+📖 **[Read the full documentation →](https://vishalsingha.github.io/AI_Kindle/)**
+
 </div>
 
-![AI Kindle library view](docs/screenshots/library.png)
+![AI Kindle library view](docs/public/screenshots/library.png)
 
 ---
 

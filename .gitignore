@@ -7,3 +7,7 @@ release/
 
 # electron-builder cache
 .cache/
+
+# VitePress build output and cache
+docs/.vitepress/dist/
+docs/.vitepress/cache/
