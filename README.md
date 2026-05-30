@@ -1,280 +1,258 @@
+<div align="center">
+
 # AI Kindle
 
 **A fast, local, privacy-first PDF study companion for your desktop.**
 
-AI Kindle lets you keep a searchable library of PDFs, annotate them with highlights and notes, write long-form Markdown notes alongside each book, open two books side-by-side, and ask a local AI to summarize, explain, or chat about what you're reading — all without uploading your documents to anyone's server.
+Keep a searchable library of PDFs, annotate them with highlights and notes, write long-form Markdown notes alongside each book, open two books side-by-side, and ask an AI to summarize, explain, or chat about what you're reading — all without uploading your documents anywhere.
+
+[![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-blue)]()
+[![electron](https://img.shields.io/badge/electron-28-47848f)]()
+[![react](https://img.shields.io/badge/react-18-61dafb)]()
+[![license](https://img.shields.io/badge/license-personal--use-lightgrey)]()
+
+</div>
+
+![AI Kindle library view](docs/screenshots/library.png)
 
 ---
+
+## Why AI Kindle?
+
+Most desktop PDF readers are either dumb (no notes, no search, no progress) or cloud-bound (Adobe, Kindle, Notion AI). AI Kindle is built for people who read a lot of PDFs — research papers, textbooks, long-form articles — and want one app that:
+
+- **Stays local.** Every PDF, annotation, note, and AI conversation lives in `~/.config/ai-kindle/` (or the macOS / Windows equivalent). Nothing is uploaded.
+- **Scales.** The library grid is virtualized, thumbnails cache as JPEGs, and the reader only renders pages near the viewport — 500-page books open instantly.
+- **Has real annotations.** Five-color highlights with clean per-line rects, sticky comments, inline text notes, all exportable to Markdown.
+- **Has real AI.** Optional OpenAI / Azure OpenAI integration for summaries, explanations, and chat over your highlights — bring your own key.
+- **Has good keyboard ergonomics.** ⌘K command palette, ⌘B / ⌘J panel toggles, ⌘D theme, Esc to leave a book.
 
 ## Table of contents
 
-- [What it is](#what-it-is)
-- [Feature overview](#feature-overview)
-- [Screenshots / concepts](#screenshots--concepts)
-- [Requirements](#requirements)
+- [Features](#features)
+- [Installation](#installation)
+  - [Ubuntu / Debian (.deb)](#ubuntu--debian-deb)
+  - [Any Linux (AppImage)](#any-linux-appimage)
+  - [macOS](#macos)
+  - [Updating](#updating)
 - [Quick start](#quick-start)
-- [First-run walkthrough](#first-run-walkthrough)
-- [How to use everything](#how-to-use-everything)
-  - [Library](#library)
-  - [Importing PDFs](#importing-pdfs)
-  - [Reading a book](#reading-a-book)
-  - [Zoom](#zoom)
-  - [Table of contents](#table-of-contents)
-  - [Annotations](#annotations)
-  - [Long-form notes](#long-form-notes)
-  - [Progress tracking and status](#progress-tracking-and-status)
-  - [Tabs and split view](#tabs-and-split-view)
-  - [AI assistant](#ai-assistant)
-  - [Command palette](#command-palette)
-  - [Bulk selection](#bulk-selection)
+- [Configuration](#configuration)
+  - [AI provider](#ai-provider)
+  - [Where your data lives](#where-your-data-lives)
+- [Usage](#usage)
 - [Keyboard shortcuts](#keyboard-shortcuts)
-- [Where your data lives](#where-your-data-lives)
-- [Privacy](#privacy)
-- [Troubleshooting](#troubleshooting)
+- [Syncing across devices](#syncing-across-devices)
+- [Build from source](#build-from-source)
 - [Architecture](#architecture)
-- [Development](#development)
-- [Build for production](#build-for-production)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ---
 
-## What it is
-
-AI Kindle is an Electron desktop app built for focused reading sessions. It is:
-
-- **Local-first** — every PDF, annotation, note, and AI conversation is stored on your machine in SQLite. Nothing is sent to a cloud.
-- **Fast on big libraries** — the library view is virtualized, thumbnails are cached as JPEGs, and the reader only renders pages that are about to be visible.
-- **Fast on big PDFs** — 500-page books open without allocating 500 canvases. Jumping to any page from the table of contents is near-instant.
-- **AI-capable** — integration with the OpenAI API for summaries, plain-English explanations, and document Q&A. Bring your own API key; it's encrypted and stored locally.
-
----
-
-## Feature overview
+## Features
 
 | Area | What you get |
 |---|---|
-| **Library** | Grid and list views, search, sort by Date Added / Last Read / Title, status tabs (All / To Do / In Progress / Done), drag-and-drop import, "Continue Reading" banner for your last session |
-| **Import** | File picker or bulk folder import, duplicate-content detection (SHA-256), duplicate-title warning with pre-filled `copy_of_` rename, atomic file copy so crashes never leave half-imported files |
-| **Reader** | Virtualized page rendering, pinch-to-zoom with anchor preservation, smooth / instant scroll (instant for long TOC jumps), selectable text, table of contents sidebar, progress bar, page counter |
-| **Annotations** | 5-color highlights with clean per-line rects, sticky-note comments, inline text notes, annotation sidebar grouped by page, Markdown export |
+| **Library** | Grid + list views, fuzzy search, sort by Date Added / Last Read / Title, status tabs (All / To Do / In Progress / Done), drag-and-drop import, "Continue Reading" banner that resumes your last session |
+| **Import** | File picker or bulk folder import, duplicate-content detection (SHA-256), atomic file copy so crashes never leave half-imported files |
+| **Reader** | Virtualized page rendering, pinch-to-zoom with anchor preservation, instant TOC jumps, selectable text, page counter |
+| **Annotations** | 5-color highlights with per-line rects, sticky-note comments, inline text notes, Markdown export of all notes |
 | **Notes** | Per-book Markdown editor with live preview and autosave |
-| **Tabs & split view** | Keep multiple books open; open a second book in a right-hand pane to read side-by-side |
-| **AI** | OpenAI-powered summarize / explain / chat with streaming responses, conversation history per book |
+| **Tabs & split view** | Multiple books open at once; "Open to the right" puts a second book in a secondary pane |
+| **AI** | OpenAI / Azure OpenAI streaming chat, summarize / explain on any selection, conversation history per book — bring your own key |
 | **Themes** | Light and dark |
-| **Productivity** | Command palette (⌘K), keyboard shortcuts, bulk select with shift / ⌘-click, recents, resume-last-session |
+| **Productivity** | Command palette (⌘K), shift / ⌘-click bulk selection, recents, resume-last-session |
+| **Privacy** | No telemetry. No account. No sync server. Your data never leaves your machine unless you actively chat with the AI |
 
 ---
 
-## Screenshots / concepts
+## Installation
 
-```
- ┌───────────────────────────────────────────────────────────┐
- │  ⌘K  Library                                       🌙     │
- ├───────────────────────────────────────────────────────────┤
- │  [Continue Reading]  Deep Learning · Page 184  →          │
- ├───────────────────────────────────────────────────────────┤
- │  All  [To Do 12]  [In Progress 3]  [Done 7]     Import ▼  │
- ├───────────────────────────────────────────────────────────┤
- │  [▓▓▓] [▓▓▓] [▓▓▓] [▓▓▓] [▓▓▓]                            │
- │  [▓▓▓] [▓▓▓] [▓▓▓] [▓▓▓] [▓▓▓]  ← grid of PDF thumbnails  │
- └───────────────────────────────────────────────────────────┘
-```
+Prebuilt installers are attached to every [GitHub release](https://github.com/vishalsingha/AI_Kindle/releases). Pick your platform below.
 
-```
- ┌──────────┬───────────────────────────────┬────────────────┐
- │ TOC      │    Page 42 of 312             │   AI Assistant │
- │ Notes    │                               │                │
- │ ─────    │    ┌───────────────────┐      │  > What is     │
- │ ▸ Ch 1   │    │                   │      │    chapter 3   │
- │ ▾ Ch 2   │    │  Rendered page    │      │    about?      │
- │   § 2.1  │    │   with                  │                │
- │   § 2.2  │    │  highlights       │      │  Chapter 3     │
- │ ▸ Ch 3   │    │                   │      │  covers…       │
- │          │    └───────────────────┘      │                │
- └──────────┴───────────────────────────────┴────────────────┘
+### Ubuntu / Debian (.deb)
+
+```bash
+VERSION=1.2.3   # or whatever's latest on the releases page
+
+wget -O "/tmp/ai-kindle_${VERSION}_amd64.deb" \
+  "https://github.com/vishalsingha/AI_Kindle/releases/download/v${VERSION}/ai-kindle_${VERSION}_amd64.deb"
+
+sudo apt install -y "/tmp/ai-kindle_${VERSION}_amd64.deb"
 ```
 
----
+AI Kindle will appear in your **Activities / app launcher** (search "ai kindle" or "pdf") and as an "Open With" option when you right-click any PDF in Files / Nautilus. You can also launch it from a terminal with `ai-kindle`.
 
-## Requirements
+#### One-command updates
 
-- **macOS, Linux, or Windows** (Electron app)
-- **Node.js 18+** and npm (for running / building from source)
-- **Optional: an [OpenAI API key](https://platform.openai.com/api-keys)** — only required for AI features
+Drop this script into `~/.local/bin/update-ai-kindle`, `chmod +x` it, and run it any time to install the latest release:
+
+```bash
+#!/usr/bin/env bash
+# Install the latest AI Kindle .deb from GitHub releases.
+set -euo pipefail
+REPO="vishalsingha/AI_Kindle"
+ARCH="${ARCH:-amd64}"
+
+TAG=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
+      | sed -nE 's/.*"tag_name": *"(v[^"]+)".*/\1/p' | head -n1)
+VERSION="${TAG#v}"
+
+INSTALLED=$(dpkg-query -W -f='${Version}' ai-kindle 2>/dev/null || echo "none")
+if [[ "$INSTALLED" == "$VERSION" ]]; then
+  echo "Already on $VERSION."; exit 0
+fi
+
+DEB="ai-kindle_${VERSION}_${ARCH}.deb"
+TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
+curl -fL --progress-bar -o "$TMP/$DEB" \
+  "https://github.com/$REPO/releases/download/$TAG/$DEB"
+sudo apt install -y "$TMP/$DEB"
+echo "✓ Now on $(dpkg-query -W -f='${Version}' ai-kindle)."
+```
+
+Then upgrades become:
+
+```bash
+update-ai-kindle
+```
+
+### Any Linux (AppImage)
+
+```bash
+VERSION=1.2.3
+mkdir -p ~/Apps
+
+wget -O "$HOME/Apps/AI_Kindle-${VERSION}.AppImage" \
+  "https://github.com/vishalsingha/AI_Kindle/releases/download/v${VERSION}/AI%20Kindle-${VERSION}.AppImage"
+
+chmod +x "$HOME/Apps/AI_Kindle-${VERSION}.AppImage"
+"$HOME/Apps/AI_Kindle-${VERSION}.AppImage"
+```
+
+Portable — no installation, runs on any glibc-based distro.
+
+### macOS
+
+Download the latest `.dmg` from [Releases](https://github.com/vishalsingha/AI_Kindle/releases), open it, and drag **AI Kindle.app** into your `/Applications` folder. The build is currently **unsigned**, so on first launch you'll need to:
+
+1. Right-click `AI Kindle.app` → **Open** → **Open** in the confirmation dialog (one-time prompt).
+2. Subsequent launches work normally from Spotlight, Launchpad, or the dock.
+
+> Building for Apple Silicon and Intel separately — pick the one matching your Mac. `arm64` for M-series, `x64` for Intel.
+
+### Windows
+
+Currently best installed from source — see [Build from source](#build-from-source). Native `.exe` and portable Windows installers are in `electron-builder.yml`'s plan but aren't yet attached to releases.
+
+### Updating
+
+- **Linux (.deb)**: `update-ai-kindle` (the script above), or manually `wget` + `apt install` the latest `.deb`.
+- **Linux (AppImage)**: just download the new AppImage and run it. Delete the old one.
+- **macOS**: drag the new `.app` over the old one in `/Applications`.
+- Your data in the user-data directory ([see below](#where-your-data-lives)) is **never** touched by upgrades.
 
 ---
 
 ## Quick start
 
-```bash
-# 1. Clone and install
-git clone <this repo>
-cd AI_Kindle
-npm install
+After installing:
 
-# 2. Run the app
-npm run dev
+1. **Launch** AI Kindle (from your app launcher or `ai-kindle` in a terminal).
+2. **Drop a PDF** onto the library window — or click **Import → Import Files**.
+3. **Click the cover** to open the reader at page 1.
+4. **Select text** and pick a color from the floating toolbar to highlight.
+5. **Press ⌘K** to bring up the command palette and jump anywhere.
 
-# 3. (Optional) Enable AI features
-#    Open the AI panel in the app (brain icon) and paste your OpenAI API key.
-#    Get one at https://platform.openai.com/api-keys
+(Optional) Open the AI panel (brain icon, or **⌘J**), pick OpenAI or Azure OpenAI, paste your API key, and ask away. Your key is encrypted in the OS keychain.
+
+---
+
+## Configuration
+
+### AI provider
+
+AI features are off by default and require you to bring your own credentials. AI Kindle speaks two protocol shapes:
+
+| Provider | What you need | Where to get it |
+|---|---|---|
+| **OpenAI** | An API key starting with `sk-…` | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| **Azure OpenAI** | Endpoint + API key + API version + one or more deployment names | Azure Portal → your OpenAI resource |
+
+To configure:
+
+1. Open the AI panel with **⌘J** (or click the brain icon in the titlebar).
+2. Pick **OpenAI** or **Azure OpenAI**.
+3. Fill in the fields and click **Save & Connect**. AI Kindle validates by hitting `/models`.
+4. Your key is encrypted via Electron's `safeStorage` (macOS Keychain, Windows DPAPI, kwallet / libsecret on Linux).
+
+You can also point at any **OpenAI-compatible endpoint** (LiteLLM, OpenRouter, local vLLM, …) by changing the base URL under the OpenAI provider.
+
+### Where your data lives
+
+| Platform | Path |
+|---|---|
+| macOS | `~/Library/Application Support/ai-kindle/` |
+| Linux | `~/.config/ai-kindle/` |
+| Windows | `%APPDATA%\ai-kindle\` |
+
+Inside that directory:
+
+```
+ai-kindle.db          SQLite — books, annotations, notes, conversations, settings
+ai-kindle.db-wal/-shm Write-ahead log (managed by SQLite)
+library/              Your imported PDFs (renamed to <id>.pdf)
+thumbnails/           Cached JPEG covers
 ```
 
-The Electron window opens and your empty library is ready. Click **Import** or drag a PDF onto the window.
+Back up the whole directory while the app is closed for a snapshot of everything. Delete it to reset.
+
+Since v1.2.0, file paths inside `ai-kindle.db` are **stored as basenames and resolved at read time**, which means you can copy this directory between Mac / Linux / Windows installs and everything still works — see [Syncing across devices](#syncing-across-devices).
 
 ---
 
-## First-run walkthrough
-
-1. **Import a PDF** — drag a `.pdf` from Finder / Explorer onto the library window, or click **Import → Import Files**.
-2. **Click the cover** — the book opens at page 1.
-3. **Highlight a sentence** — click-and-drag across text. A floating toolbar appears with five colors and AI actions.
-4. **Mark it done** — click the "Mark Done" button in the titlebar when you've finished reading.
-5. **Come back tomorrow** — the "Continue Reading" banner will resume you exactly where you left off.
-
----
-
-## How to use everything
+## Usage
 
 ### Library
 
-The library is your home screen. It shows all PDFs you've imported as a responsive grid (or a compact list). Every book has:
+The default view. 48-book grid pictured above. Hit ⌘K and start typing to jump to any book.
 
-- A thumbnail (generated from page 1, cached as JPEG)
-- A status badge — **To Do**, **In Progress**, or **Done**
-- A progress percentage (derived from your last annotation) when in progress
-- A hover menu (⋯) with **Mark as Done / To Do**, **Show in Finder**, and **Delete**
+- **Status tabs** at the top: `All`, `To Do`, `In Progress`, `Done`. Books with at least one annotation are "In Progress"; manually marked books are "Done".
+- **Continue Reading** banner resumes your last session with one click.
+- **Search bar** filters across title, author, and tags.
+- **Drag-and-drop** any PDFs or folders of PDFs to import. Duplicate detection by SHA-256.
+- **Hover menu (⋯)** on each card: Mark Done / To Do, Show in Finder/Files, Delete.
 
-**Status tabs** at the top filter the grid: **All**, **To Do**, **In Progress**, **Done**. Search filters across title, author, and tags. Sort by **Date Added**, **Last Read**, or **Title**.
+### Reader
 
-The **Continue Reading** card at the top (shown when there is a relevant book) resumes your most recent in-progress reading with one click.
+Click a book to open it. The reader has:
 
-### Importing PDFs
+- **Sidebar (⌘B)** — table of contents, annotation list (grouped by page), Markdown export.
+- **Center** — virtualized pages, only what's near the viewport is rasterized.
+- **AI panel (⌘J)** — chat, summarize / explain on the current selection, conversation history.
+- **Notes (right edge icon)** — a per-book Markdown editor with live preview.
 
-- Click **Import → Import Files** for a multi-file picker
-- Click **Import → Import Folder** to bulk import every PDF in a folder
-- Or **drag-and-drop** any number of PDFs onto the library
-
-AI Kindle computes a SHA-256 of each file before copying it. If you try to import a PDF that already exists (same content), you'll see a dialog offering to **Skip**, **Keep original name**, or import as a new copy with a pre-filled `copy_of_…` title. If the title (but not the content) already exists, you'll be prompted to rename.
-
-PDFs are copied into the app's user-data directory; your originals are never modified.
-
-### Reading a book
-
-Click any book cover to open the reader. Or use **Cmd+K** then type the title.
-
-The reader has three optional panels:
-- **Left (sidebar)** — table of contents and annotation list
-- **Center** — the document
-- **Right** — AI assistant / notes / secondary pane
-
-Scroll with the mouse / trackpad as you would any document. Pages only render as they approach the viewport; everything else is a cheap placeholder of the correct size so scroll height stays stable.
-
-At the top-right of the titlebar:
-- **Mark Done** — flips the book between To Do/In Progress and Done
-- **Sidebar toggle**
-- **AI panel toggle**
-- **Theme toggle** (light / dark)
-
-At the bottom, the **page controls** show your current page, total pages, and zoom level.
-
-### Zoom
-
-- **Trackpad pinch** — two-finger pinch zooms the PDF around the point under your cursor. During the gesture, zoom is handled by GPU-accelerated CSS transform for zero lag; once you stop pinching the PDF silently re-rasterizes at the final size for crisp text.
-- **Cmd+Scroll** — same behavior, for mice with a wheel
-- **Cmd + / Cmd -** — zoom in / out by one step
-- **Reset** — click the zoom percentage in the bottom bar
-
-### Table of contents
-
-Open the sidebar (⌘B). The **Contents** tab shows the PDF's outline when available — click any entry to jump. Long jumps scroll instantly; short jumps (< 5 pages) animate smoothly. The target page is pre-rendered before you arrive so it's ready on landing.
+Click "Mark Done" in the titlebar when finished.
 
 ### Annotations
 
-**Highlight** — select text and pick a color from the floating toolbar.
-- 5 colors: yellow, green, blue, pink, orange
-- Multi-line highlights render as clean per-line rectangles, not stacked blotchy layers
+Select text → pick a color from the floating toolbar (yellow, green, blue, pink, orange) for a highlight. Or pick the comment / text-note icons to add a sticky note.
 
-**Comment** — select text and click the comment icon. A popover appears to type your note. Comments stay attached to the highlighted text even if you later re-arrange pages in the reader.
-
-**Text note** — same flow; appears as an inline sticky-note icon you can expand.
-
-**Annotation sidebar** (⌘B → Notes tab) — lists all annotations in the current book, grouped by page. Click any entry to jump to its page. The **Export** button downloads the annotations as a Markdown file (one section per page, with highlighted text as blockquotes and your notes below them).
-
-All annotations are saved in local SQLite, keyed by the book. Your progress percentage is derived from your furthest-annotated page.
-
-### Long-form notes
-
-Click the notebook icon (or open the right-side notes panel) to get a full Markdown editor attached to the current book. Live preview, autosave, keyboard-focused workflow. Perfect for chapter summaries that don't belong in marginalia.
-
-### Progress tracking and status
-
-AI Kindle does **not** track progress by counting pages scrolled (that was found to be noisy). Instead:
-
-- Any PDF you haven't annotated is **To Do**
-- A PDF with at least one annotation is **In Progress**; progress = last annotation page ÷ total pages
-- A PDF you manually flag with **Mark Done** is **Done** (always 100%)
-
-You can flip Done → To Do at any time. Deleting a book removes its annotations and thumbnail too.
+Annotations are stored in SQLite keyed by book id. Multi-line highlights render as clean per-line rectangles rather than stacked layers. Use the sidebar to export everything as Markdown.
 
 ### Tabs and split view
 
-- Click a book from the library → opens in a new tab (or reuses one)
-- Right-click a tab → "Open to the right" puts the book in a secondary pane
-- Drag tabs to reorder them
-- Close a tab with its ×
+Books open in tabs. Right-click a tab → **Open to the right** puts that book in a second pane next to the current one — great for textbook + cheatsheet workflows.
 
-Split view is great for reference: keep a textbook on the left and your notes or cheat-sheet PDF on the right.
+### AI
 
-### AI assistant
+With a configured provider:
 
-AI features use any OpenAI-compatible API. AI Kindle supports two provider shapes out of the box:
+- **Selection toolbar** → sparkle icon = summarize, brain-circuit = explain.
+- **AI panel** → free-form chat about the current book.
+- **Annotation sidebar** → multi-select highlights and pick a template (study notes, flashcards, themes, quiz).
 
-- **OpenAI cloud** — `https://api.openai.com/v1`. Bring your own API key from [platform.openai.com/api-keys](https://platform.openai.com/api-keys).
-- **Azure OpenAI** — your own Azure deployment. Requires an endpoint, API version, one or more deployment names, and an Azure API key.
-
-**First-time setup:**
-1. Open the AI panel with ⌘J (or click the brain icon in the titlebar).
-2. Pick **OpenAI** or **Azure OpenAI** from the provider tabs.
-3. Fill in the appropriate fields:
-   - **OpenAI** → just paste your API key (`sk-…`). The base URL defaults to `api.openai.com/v1` but can be changed for proxies or compatible endpoints.
-   - **Azure OpenAI** → paste your Azure key, endpoint (e.g. `https://your-resource.openai.azure.com/`), API version (e.g. `2024-12-01-preview`), and one or more deployment names (e.g. `gpt-4.1`).
-4. Click **Save & Connect**. AI Kindle validates the credentials by calling the provider's `/models` endpoint.
-5. Your key is encrypted via Electron's `safeStorage` (uses the OS keychain / DPAPI / kwallet) and stored in the local SQLite database. It never leaves your machine except on outbound requests to the provider you configured.
-
-**For Azure users**, the "model" dropdown shows your deployment names instead of OpenAI model IDs, and each request is routed to `{endpoint}/openai/deployments/{deployment}/chat/completions?api-version=…` with the `api-key` header.
-
-**Usage:**
-- **Summarize** — select some text and click the sparkle icon in the selection toolbar
-- **Explain** — select some text and click the brain-circuit icon for a plain-English breakdown
-- **Chat** — open the AI panel and ask free-form questions about the current book
-- **Generate from highlights** — in the annotations sidebar, multi-select highlights and pick a template (study notes, flashcards, themes, quiz, etc.)
-
-The panel streams responses token-by-token. Your prompt plus the PDF/highlight context is sent directly to the provider you configured — OpenAI or Azure. Conversation history is saved per book, locally.
-
-**Changing providers / keys / models:**
-- Click the gear icon next to the status dot in the AI panel header to switch between OpenAI and Azure, update keys, or add/remove Azure deployments.
-- For OpenAI, the model dropdown lists every chat-capable model your account has access to. `gpt-4o-mini` is a fast, cheap default that works well for most queries.
-- For Azure, the dropdown lists the deployment names you entered in settings.
-
-**Compatible endpoints** — under the OpenAI provider you can change the base URL to any OpenAI-compatible endpoint (LiteLLM, local vLLM, OpenRouter, etc.).
-
-### Command palette
-
-**⌘K** anywhere opens the command palette. Start typing to:
-- Jump to any book in your library
-- Jump to any page (`:123` or "page 123")
-- Run an action (toggle theme, close book, open AI, open notes, …)
-
-It's the fastest way to navigate once you have a few books.
-
-### Bulk selection
-
-In the library:
-- **⌘-click** a book to toggle it into selection
-- **Shift-click** extends the selection to that book
-- While in selection mode, a checkbox appears on each card so you can continue without modifiers
-
-Selected books can be deleted / marked done / untagged in bulk via the action bar that appears at the bottom.
+Responses stream token-by-token. Conversations are saved per-book in the local DB.
 
 ---
 
@@ -290,78 +268,74 @@ Selected books can be deleted / marked done / untagged in bulk via the action ba
 ### Reader
 | Shortcut | Action |
 |---|---|
-| `Space`, `↑`, `↓`, mouse wheel | Natural scroll |
-| `PageDown` / `PageUp` | Jump to next / previous page |
-| `⌘→` / `⌘←` | Jump to next / previous page |
-| `Home` / `End` | Jump to first / last page |
+| `Space`, `↑`, `↓`, wheel | Scroll |
+| `PageDown` / `PageUp` | Next / previous page |
+| `⌘→` / `⌘←` | Next / previous page |
+| `Home` / `End` | First / last page |
 | `⌘+` / `⌘-` | Zoom in / out |
-| `⌘B` | Toggle sidebar (TOC / annotations) |
-| `⌘J` | Toggle AI panel |
-
-### Import dialog
-| Shortcut | Action |
-|---|---|
-| `Enter` | Confirm import with the shown title |
-| `Esc` | Skip this file |
+| `⌘B` | Sidebar (TOC + annotations) |
+| `⌘J` | AI panel |
 
 ### Library
 | Shortcut | Action |
 |---|---|
-| Type anything | Focuses the search bar |
+| Type | Focus search |
+| `⌘`-click | Toggle single-book selection |
 | `Shift`-click | Range-select books |
-| `⌘`-click | Toggle individual book selection |
+
+> On Windows / Linux, swap `⌘` for `Ctrl`.
 
 ---
 
-## Where your data lives
+## Syncing across devices
 
-Everything is stored under Electron's user-data directory for the app:
+There's no built-in sync server — but because `~/.config/ai-kindle/` is a self-contained, portable directory (since v1.2.0), you have two clean options.
 
-- **macOS** — `~/Library/Application Support/ai-kindle/`
-- **Windows** — `%APPDATA%\ai-kindle\`
-- **Linux** — `~/.config/ai-kindle/`
+### Option 1: Manual transfer (Google Drive / USB / scp)
 
-Inside:
+```bash
+# On the source machine (app must be closed):
+sqlite3 "$HOME/.config/ai-kindle/ai-kindle.db" "PRAGMA wal_checkpoint(TRUNCATE);"
+tar -czvf ~/ai-kindle-data.tgz -C "$HOME/.config/ai-kindle" \
+  ai-kindle.db library thumbnails
 
-| Path | Contents |
-|---|---|
-| `ai-kindle.db` | SQLite database: books, annotations, conversations, messages |
-| `ai-kindle.db-wal` / `-shm` | Write-ahead log (managed by SQLite; do not delete while the app is running) |
-| `library/` | Copies of your imported PDFs (`<id>.pdf`) |
-| `thumbnails/` | JPEG thumbnails, one per book hash |
+# Move the tgz to the target machine via Drive / USB / scp.
 
-Safe to back up any of these while the app is closed. To reset everything, quit the app and delete the whole folder.
+# On the target machine (app closed, first launch already done):
+tar -xzvf ~/ai-kindle-data.tgz -C "$HOME/.config/ai-kindle"
+```
+
+Paths are stored as basenames internally and resolved against the target's library directory, so books open without any further fix-up.
+
+On macOS the source/destination directory is `~/Library/Application Support/ai-kindle/` and you'll re-enter the API key once (the encrypted blob is OS-specific).
+
+### Option 2: Continuous sync via Syncthing
+
+Symlink the data directory on every device to a Syncthing-managed shared folder, e.g. `~/Sync/ai-kindle/`. As long as you only run the app on **one device at a time** (SQLite + concurrent writers = corruption), every annotation made on machine A appears on machine B within seconds.
 
 ---
 
-## Privacy
+## Build from source
 
-AI Kindle has no telemetry, no account, no sync, and no background network activity. It reads local files, writes to local SQLite, and only talks to the internet when you actively use AI features — at which point it sends your prompt + the current PDF context to whichever provider you've configured (OpenAI, Azure OpenAI, or any compatible endpoint you point it at). Your API key is encrypted on disk via Electron's `safeStorage` (OS keychain on macOS, DPAPI on Windows, kwallet / libsecret on Linux). Electron's `webSecurity` is disabled only so the renderer can load local `file://` PDFs from your library directory; external URLs are never loaded by the renderer itself.
+Requirements: **Node.js 18+** and **npm**.
 
----
+```bash
+git clone https://github.com/vishalsingha/AI_Kindle.git
+cd AI_Kindle
+npm install
+npm run dev     # hot-reload Electron with DevTools
+```
 
-## Troubleshooting
+To produce installers:
 
-**"Failed to load PDF"**
-- The file may have been moved or deleted from your library folder. Re-import it.
-- Check the DevTools console for a specific pdf.js error (open with Cmd+Option+I in dev mode).
+```bash
+npm run build           # type-check + bundle
+npm run dist:mac        # .dmg + .zip for macOS
+npm run dist:linux      # .deb + .AppImage for Linux
+npm run dist:win        # .exe / NSIS for Windows
+```
 
-**AI panel says "Offline"**
-- Open the AI panel (⌘J or brain icon), pick your provider, and paste your credentials.
-- If "Not configured" stays red after saving, the validation call failed — the red banner will show the provider's exact reason (invalid key, insufficient_quota, wrong endpoint, wrong deployment, etc.).
-- For Azure: double-check the `api-version` and deployment name exactly as they appear in Azure Portal. The endpoint must be the resource URL with no trailing path (e.g. `https://your-resource.openai.azure.com/`), not a deployment-specific URL.
-
-**Thumbnails are slow on first library visit**
-- Thumbnails are generated lazily the first time you view a book card. On subsequent visits they load instantly from disk. For a brand-new library of 100+ books, expect a one-time spin to generate all JPEGs (capped at 3 in parallel).
-
-**Re-imported PDF has old annotations**
-- This was fixed: re-imports now get a fresh ID and no prior annotations. If you're on an older build, upgrade or delete `ai-kindle.db` to reset.
-
-**Zoom looks blurry briefly after pinching**
-- The blur is the old rasterization being stretched for the first ~100ms after you stop pinching, while pdf.js re-renders at the new scale. This is intentional — it's the trade-off that keeps the pinch gesture at 60fps.
-
-**App won't open / crashes immediately**
-- Delete the `ai-kindle.db-wal` file (only when the app is closed) and relaunch. It will safely recover from the last committed transaction.
+Outputs land in `release/`. The GitHub Actions workflow at `.github/workflows/build-linux.yml` does the Linux builds on every `v*` tag push.
 
 ---
 
@@ -369,71 +343,66 @@ AI Kindle has no telemetry, no account, no sync, and no background network activ
 
 ```
 src/
-├── main/                 # Electron main process (Node)
-│   ├── index.ts          # Window, lifecycle, IPC registration
-│   ├── database.ts       # SQLite schema, migrations, queries
-│   ├── file-manager.ts   # Import, delete, thumbnail storage
-│   └── openai.ts         # OpenAI streaming client + encrypted key storage
-├── preload/              # Secure bridge between main and renderer
-├── renderer/src/         # React UI
-│   ├── components/       # Reader, library, AI, notes, command palette
-│   ├── stores/           # Zustand stores (library, reader, annotations, AI, notes, tabs, selection, command palette)
-│   ├── hooks/            # useImporter, useAnnotations, …
-│   └── lib/              # Utilities (pdf-setup, thumbnail renderer, rect merging, …)
+├── main/                 Electron main process (Node)
+│   ├── index.ts          BrowserWindow + lifecycle + IPC registration
+│   ├── database.ts       SQLite schema, migrations, queries
+│   ├── file-manager.ts   PDF import / delete / thumbnail storage
+│   ├── openai.ts         Streaming OpenAI / Azure client + encrypted key
+│   └── pdf-export.ts     pdf-lib-based annotated-PDF export
+├── preload/              Typed IPC bridge (contextBridge)
+└── renderer/src/         React UI
+    ├── components/       reader, library, AI, notes, command palette
+    ├── stores/           Zustand stores (one per domain)
+    ├── hooks/            useImporter, useAnnotations, …
+    └── lib/              pdf-setup, thumbnail renderer, rect merging
 ```
 
-**Key design choices:**
+Key design choices:
 
-- **SQLite (WAL mode)** for all structured data — fast, atomic, crash-safe
-- **File system for binary data** (PDFs and thumbnails) — avoids bloating the DB
-- **Content-hash-based dedup** at import time — users decide explicitly whether duplicates should coexist
-- **Virtualized library grid** and **virtualized PDF pages** — memory and render cost stay flat regardless of library / book size
-- **CSS-transform zoom during pinch, then committed pdf.js re-render on release** — smooth UX without sacrificing sharpness
-- **Lazy-loaded reader bundle** — the library view boots without paying for pdf.js text-layer, AI panel, notes editor, etc.
+- **SQLite (WAL mode)** for all structured data — fast, atomic, crash-safe.
+- **File system for binaries** (PDFs, thumbnails) — keeps the DB small.
+- **Content-hash dedup at import time** — user decides whether to allow same-content duplicates.
+- **Virtualized library grid + virtualized PDF pages** — memory/render cost flat in library size and book length.
+- **CSS-transform zoom while pinching, then pdf.js re-rasterize on release** — 60fps gesture with crisp text once you stop.
+- **Lazy-loaded reader bundle** — opening the library never pays for pdf.js, AI panel, notes editor, etc.
+- **Portable file paths** — books are stored by basename; the data directory can be moved between machines / OSes without rewriting anything.
+
+Stack: **Electron 28** · **electron-vite** · **React 18** · **TypeScript** · **Tailwind CSS** · **Zustand** · **better-sqlite3** · **react-pdf / pdf.js** · **@tanstack/react-virtual** · **pdf-lib** (annotated PDF export).
 
 ---
 
-## Development
+## Troubleshooting
+
+**App won't show in Activities / Files "Open With" on Linux**
+Make sure you're on v1.2.3+. Older builds shipped a sparse `.desktop` file that GNOME ignored for search. Then force a refresh:
 
 ```bash
-npm install        # install dependencies
-npm run dev        # launch Electron with hot-reload and DevTools
+sudo update-desktop-database /usr/share/applications
+sudo gtk-update-icon-cache -f -t /usr/share/icons/hicolor
 ```
 
-The app uses:
-- **Electron** + **electron-vite** for the main/preload/renderer build
-- **React 18** + **TypeScript** + **Tailwind CSS**
-- **Zustand** for app state
-- **better-sqlite3** for embedded storage
-- **react-pdf** wrapping **pdf.js** for rendering
-- **@tanstack/react-virtual** for the library grid
-- **OpenAI API** (external) for AI — configurable base URL for compatible endpoints
+Log out + back in if it still doesn't appear (Wayland sessions cache aggressively).
 
-To enable strict production checks before a release:
+**"Failed to load PDF"**
+The source file was moved or deleted from the library folder. Re-import it from its original location.
 
-```bash
-npm run build      # type-check + bundle everything
-npm run preview    # run the production build
-```
+**AI panel says "Offline" / red banner after Save**
+The validation call to `/models` failed. The banner shows the exact provider message — usually invalid key, wrong endpoint, wrong deployment, or quota exhausted. For Azure: the endpoint must be the resource URL (`https://your-resource.openai.azure.com/`) with no trailing path; deployment names are case-sensitive.
 
-### Code style
+**Thumbnails are slow on first library visit**
+Generated lazily, capped at 3 in parallel. Subsequent loads come from disk and are instant.
 
-- Prefer small, focused components; state lives in Zustand stores, not prop drills
-- All Electron IPC goes through `preload/index.ts` (typed in `preload/index.d.ts`); never use `ipcRenderer` directly from the renderer
-- All heavy PDF work happens in the renderer via `pdf.js` — the main process only moves bytes and hits SQLite
+**Zoom looks momentarily blurry after pinching**
+That's the previous rasterization being stretched for ~100ms while pdf.js re-renders at the new scale. Trade-off for a 60fps gesture.
 
----
+**App crashes immediately on launch**
+Close the app, delete `ai-kindle.db-wal` from the data directory, and relaunch — SQLite will recover from the last committed transaction. If that doesn't help, rename the whole data directory and restart; the app will create a fresh one and you can selectively copy your `library/` back in.
 
-## Build for production
-
-```bash
-npm run build
-```
-
-Outputs to `out/`. To create a distributable installer you can use [electron-builder](https://www.electron.build) or the target of your choice — this repo doesn't ship a release config by default.
+**Double title bar on Linux / Windows**
+Fixed in v1.2.1. Upgrade.
 
 ---
 
 ## License
 
-Personal use. No warranty. If you want to redistribute or adapt, open an issue or send a note first.
+Personal use. No warranty. If you want to redistribute or adapt, open an issue first.
