@@ -47,6 +47,14 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        with:
+          # Auto-enable Pages on the repo if it isn't already turned on.
+          # Without this, the first run after adding the workflow fails
+          # with "Get Pages site failed" because configure-pages can't
+          # initialize a Pages site it has no permission to create.
+          # `enablement: true` uses the workflow's own pages:write
+          # permission to enable Pages and set Source = GitHub Actions.
+          enablement: true
 
       - name: Install dependencies
         run: npm ci
